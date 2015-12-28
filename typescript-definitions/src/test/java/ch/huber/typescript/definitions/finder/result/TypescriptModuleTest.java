@@ -13,7 +13,7 @@ import static org.fest.assertions.Assertions.assertThat;
  */
 public class TypescriptModuleTest {
     private static final String NAME = "name";
-    private static final Path ROOT_PATH = FileSystems.getDefault().getPath("/root");
+    private static final Path ROOT_PATH = FileSystems.getDefault().getPath("root");
     private static final Path PATH1 = ROOT_PATH.resolve("some/other/path/script.ts");
     private static final Path PATH2 = ROOT_PATH.resolve("other/other.ts");
 
@@ -23,7 +23,6 @@ public class TypescriptModuleTest {
     public void testRootDir() {
         testee.addTypescriptFile(PATH1);
         testee.addTypescriptFile(PATH2);
-        assertThat(testee.getRootDir().toString()).isEqualTo(ROOT_PATH.toString());
+        assertThat(testee.getRootDir().toString()).isEqualTo(ROOT_PATH.toAbsolutePath().toString());
     }
-
 }
