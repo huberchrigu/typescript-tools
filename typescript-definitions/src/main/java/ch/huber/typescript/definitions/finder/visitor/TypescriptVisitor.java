@@ -25,7 +25,7 @@ public class TypescriptVisitor implements FileVisitor<Path> {
     }
 
     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        if (file.endsWith(TYPESCRIPT_EXTENSION)) {
+        if (file.toString().endsWith(TYPESCRIPT_EXTENSION)) {
             typescriptFiles.add(file);
         }
         return FileVisitResult.CONTINUE;

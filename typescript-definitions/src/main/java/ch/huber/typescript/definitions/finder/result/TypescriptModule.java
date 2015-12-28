@@ -62,8 +62,8 @@ public class TypescriptModule {
     }
 
     private Path commonParent(Path path1, Path path2) {
-        Path currentPath1 = path1.normalize();
-        Path currentPath2 = path2.normalize();
+        Path currentPath1 = path1.toAbsolutePath();
+        Path currentPath2 = path2.toAbsolutePath();
         while (!currentPath1.equals(currentPath2)) {
             if (currentPath1.getNameCount() > currentPath2.getNameCount()) {
                 currentPath1 = currentPath1.getParent();
