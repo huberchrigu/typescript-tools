@@ -1,0 +1,1 @@
+/// <reference path="some-external-reference.d.ts" />

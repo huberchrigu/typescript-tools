@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,6 +22,11 @@ import java.util.List;
  */
 public class ReferenceWriter {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReferenceWriter.class);
+    private static final String PATH_PARAM_SUFFIX = "\"";
+    private static final String PATH_PARAM_PREFIX = "path=\"";
+    private static final String PATH_PARAM_SUFFIX2 = "'";
+    private static final String PATH_PARAM_PREFIX2 = "path='";
+
     private final Path file;
     private final ArrayList<Path> references;
 
@@ -40,7 +46,9 @@ public class ReferenceWriter {
         try {
             fileWriter = new FileWriter(file.toFile());
             for (Path reference : references) {
-                fileWriter.write(getReferenceString(reference) + "\n");
+                if (!referenceExists(reference, lines)) {
+                    fileWriter.write(getReferenceString(reference) + "\n");
+                }
             }
             for (String line : lines) {
                 fileWriter.write(line);
@@ -60,12 +68,29 @@ public class ReferenceWriter {
         }
     }
 
+    private String getReferenceString(Path reference) {
+        String relativePath = getRelativePath(reference);
+        return "/// <reference " + PATH_PARAM_PREFIX + relativePath + PATH_PARAM_SUFFIX + "/>";
+    }
+
     /**
      * To get the correct relative path, the reference's file parent needs to be taken,
      * which is the directory the source file is located in.
      */
-    private String getReferenceString(Path reference) {
+    private String getRelativePath(Path reference) {
         String relativePath = file.getParent().relativize(reference).normalize().toString();
-        return "/// <reference path=\"" + relativePath + "\"/>";
+        String unixRelativePath = relativePath.replaceAll("\\" + File.separator, "/");
+        return unixRelativePath;
+    }
+
+    private boolean referenceExists(Path reference, List<String> oldLines) {
+        String relativePath = getRelativePath(reference);
+        for (String line : oldLines) {
+            if (line.contains(PATH_PARAM_PREFIX + relativePath + PATH_PARAM_SUFFIX) ||
+                    line.contains(PATH_PARAM_PREFIX2 + relativePath + PATH_PARAM_SUFFIX2)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

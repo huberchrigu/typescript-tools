@@ -24,12 +24,11 @@ import static org.fest.assertions.Assertions.assertThat;
  */
 public class DefinitionReferenceCreatorIntTest {
 
-    private Path testResourcePath;
     private Path copiedPath;
 
     @Before
     public void setUp() throws URISyntaxException, IOException {
-        testResourcePath = Paths.get(getClass().getResource("/").toURI());
+        Path testResourcePath = Paths.get(getClass().getResource("/").toURI());
         copiedPath = testResourcePath.resolve("../../target/copy").toAbsolutePath().normalize();
         FileUtils.copyDirectory(testResourcePath.toFile(), copiedPath.toFile());
     }
@@ -39,6 +38,18 @@ public class DefinitionReferenceCreatorIntTest {
         new DefinitionReferenceCreator().execute(copiedPath);
         assertModuleDefinition("_root.d.ts", "greeter.ts");
         assertModuleDefinition("chart/_Chart.d.ts", "data.ts");
+        assertModuleDefinition("testModule/test.d.ts", "dir/file.ts", "dir2/file.ts");
+        assertExternalReference("testModule/test.d.ts", "some-external-reference.d.ts");
+    }
+
+    private void assertExternalReference(String relDefinitionFilePath, String referencePath) throws IOException {
+        Path definitionFilePath = copiedPath.resolve(relDefinitionFilePath);
+        File definitionFile = definitionFilePath.toFile();
+        assertThat(definitionFile).exists();
+        FileReader fileReader = new FileReader(definitionFile);
+        String content = IOUtils.toString(fileReader);
+        fileReader.close();
+        assertReference(content, referencePath);
     }
 
     /**
@@ -52,7 +63,7 @@ public class DefinitionReferenceCreatorIntTest {
         assertThat(definitionFile).exists();
         FileReader reader = new FileReader(definitionFile);
         String definitionFileContent = IOUtils.toString(reader);
-        IOUtils.closeQuietly(reader);
+        reader.close();
         for (String typescriptFileRelPath : typescriptFiles) {
             assertReference(definitionFileContent, typescriptFileRelPath);
             Path referencedFilePath = definitionFilePath.getParent().resolve(typescriptFileRelPath);
@@ -64,13 +75,20 @@ public class DefinitionReferenceCreatorIntTest {
         assertThat(typescriptFile).exists();
         FileReader reader = new FileReader(typescriptFile);
         String typescriptContent = IOUtils.toString(reader);
-        IOUtils.closeQuietly(reader);
+        reader.close();
         Path relativePathToDefinition = typescriptFile.toPath().getParent().relativize(definitionFilePath);
-        assertReference(typescriptContent, relativePathToDefinition.toString());
+        assertReference(typescriptContent, relativePathToDefinition.toString().replaceAll("\\\\", "/"));
     }
 
+    /**
+     * Asserts that the reference exists exactly once.
+     */
     private void assertReference(String references, String referencedFile) {
-        assertThat(references).contains("path=\"" + referencedFile + "\"");
+        String pathAttribute = "path=\"" + referencedFile + "\"";
+        assertThat(references).contains(pathAttribute);
+        int indexOfPathAttribute = references.indexOf(pathAttribute);
+        String referencesAfterFirstMatch = references.substring(indexOfPathAttribute + pathAttribute.length());
+        assertThat(referencesAfterFirstMatch).doesNotContain(pathAttribute);
     }
 
     @After

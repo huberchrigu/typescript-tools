@@ -37,14 +37,19 @@ public class DefinitionReferenceCreator {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        result.getModules().stream().filter(module -> module.getMainDefinitionFile() == null).forEach(module -> {
+        result.getModules().stream().forEach(module -> {
             LOGGER.info("Create new main definition file for module {} at {}", module.getName(), module.getRootDir());
             handleModule(module);
         });
     }
 
     private void handleModule(TypescriptModule module) {
-        Path mainDefinitionFile = new MainDefinitionFileCreator(module).create();
+        if (module.getMainDefinitionFile() == null) {
+            new MainDefinitionFileCreator(module).create();
+        } else {
+            new MainDefinitionFileCreator(module).update();
+        }
+        Path mainDefinitionFile = module.getMainDefinitionFile();
         for (Path typescriptFile : module.getTypescriptFiles()) {
             new ReferenceWriter(typescriptFile).addReference(mainDefinitionFile).write();
         }
