@@ -17,7 +17,7 @@ public class DefinitionReferenceMojo
     /**
      * Location of the typescript sources.
      *
-     * @parameter expression="${project.build.sourceDirectory}"
+     * @parameter property="${project.build.sourceDirectory}"
      * @required
      */
     private Path typescriptSource;
